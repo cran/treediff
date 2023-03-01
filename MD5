@@ -1,0 +1,6 @@
+47cfe92b2e7660c83c0344f628e1c1f8 *DESCRIPTION
+cc49d5dc19b80379ed661234af7d64d4 *NAMESPACE
+cfc6b6a41735e2b06326bc5f98375fb8 *R/treediff.R
+d470fb7801b5de75e218732d2218927f *man/treediff.Rd
+83713a65d3d6dd1f32756bd284b60ea2 *tests/testthat.R
+ff67753d7b8f3ce49bd8c746a45f061c *tests/testthat/test-treediff.R
