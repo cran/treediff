@@ -1,12 +1,12 @@
 Package: treediff
 Title: Testing Differences Between Families of Trees
-Version: 0.1
-Date: 2023-02-24
+Version: 0.2
+Date: 2023-05-23
 Authors@R: 
     c(person("Nathalie", "Vialaneix", , "nathalie.vialaneix@inrae.fr", 
              role = c("aut", "cre"), 
              comment = c(ORCID = "0000-0003-1156-0639")),
-      person("Gwendaelle", "Cardenac", , , role = "aut"),
+      person("Gwendaelle", "Cardenas", , , role = "aut"),
       person("Marie", "Chavent", , "marie.chavent@u-bordeaux.fr", role = "aut"),
       person("Sylvain", "Foissac", , "sylvain.foissac@inrae.fr", role = "aut"),
       person("Pierre", "Neuvial", , "pierre.neuvial@math.univ-toulouse.fr", 
@@ -16,21 +16,23 @@ Description: Perform test to detect differences in structure between families of
              trees. The method is based on cophenetic distances and aggregated
              Student's tests.
 Depends: R (>= 4.0.0)
-Imports: dplyr, limma, stats, reshape2, testthat, rlang
+Imports: adjclust, BiocGenerics, csaw, data.table, dplyr,
+        InteractionSet, limma, methods, stats, SummarizedExperiment,
+        reshape2, testthat, rlang, HiCDOC, purrr
 License: GPL (>= 3)
 Encoding: UTF-8
 RoxygenNote: 7.2.3
-Suggests: knitr, rmarkdown, adjclust
+Suggests: knitr, rmarkdown
 URL: https://forgemia.inra.fr/scales/treediff
 BugReports: https://forgemia.inra.fr/scales/treediff/-/issues
 NeedsCompilation: no
-Packaged: 2023-03-01 08:34:49 UTC; nathalie
+Packaged: 2023-05-26 20:10:03 UTC; nathalie
 Author: Nathalie Vialaneix [aut, cre] (<https://orcid.org/0000-0003-1156-0639>),
-  Gwendaelle Cardenac [aut],
+  Gwendaelle Cardenas [aut],
   Marie Chavent [aut],
   Sylvain Foissac [aut],
   Pierre Neuvial [aut],
   Nathanael Randriamihamison [aut]
 Maintainer: Nathalie Vialaneix <nathalie.vialaneix@inrae.fr>
 Repository: CRAN
-Date/Publication: 2023-03-01 10:50:02 UTC
+Date/Publication: 2023-05-27 23:00:02 UTC

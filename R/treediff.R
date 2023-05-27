@@ -128,7 +128,7 @@ treediff <- function(trees1, trees2, replicates, scale = FALSE,
     stop("the number of leaves in one or more clusters is different between ",
     "the two sets of trees.")
   }
-  
+
   # Check if 'scale' and 'order_labels' are logical
   if (!is.logical(scale)) stop("'scale' must be logical")
   if (!is.logical(order_labels)) stop("'order_labels' must be logical")
