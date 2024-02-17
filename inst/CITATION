@@ -1,0 +1,10 @@
+bibentry(
+  bibtype = "Article",
+  textVersion = "Pierre Neuvial, Nathanael Randriamihamison, Marie Chavent, Sylvain Foissac, and Nathalie Vialaneix (2024) A two-sample tree-based test for hierarchically organized genomic signals. Journal of the Royal Statistical Society, Series C. Forthcoming.",
+  header = "To cite treediff in publications, please use",
+  author = "Pierre Neuvial, Nathanael Randriamihamison, Marie Chavent, Sylvain Foissac, and Nathalie Vialaneix",
+  title = "A two-sample tree-based test for hierarchically organized genomic signals",
+  journal = "Journal of the Royal Statistical Society, Series C",
+  year = "2024",
+  note = "Forthcoming"
+)

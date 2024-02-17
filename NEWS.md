@@ -1,3 +1,10 @@
+# Version 0.2.1 [2024-02-11]
+
+## Misc
+
+* Fixed a problem in documentation
+* Added citation of the published method
+
 # Version 0.2 [2023-05-23]
 
 ## New features

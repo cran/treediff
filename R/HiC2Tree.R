@@ -1,10 +1,10 @@
-#' @title Hi-C to trees
+#' @title Convert Hi-C to trees
 #'
-#' @description This function converts Hi-C data into trees, using the adjclust
-#' algorithm. It takes as input a file path vector, the format of the input
-#' data, the bin size of the Hi-C array, the chromosomes to be included in the
-#' analysis, and the number of replicates. It returns a list containing all
-#' trees, metadata, index and treediff results.
+#' @description This function converts Hi-C data into trees, using 
+#' \link[adjclust]{adjClust}. It takes as input a file path vector, the format 
+#' of the input data, the bin size of the Hi-C array, the chromosomes to be 
+#' included in the analysis, and the number of replicates. It returns a list 
+#' containing all trees, metadata, index and treediff results.
 #'
 #' @param files A character vector containing the file paths of the input data.
 #' @param format A character vector indicating the format of the input data:
@@ -15,17 +15,21 @@
 #' @param chromosomes A vector containing the chromosomes to be included in the
 #' analysis.
 #' @param replicates An integer indicating the number of replicates to be used
-#' in treediff.
+#' in \code{treediff}.
 #' 
-#' @return A list containing: 
-#' \itemize{
-#'   \item{trees}{ A list of all trees.}
-#'   \item{metadata}{ A data frame containing the following columns: names (name
-#'   of each tree), chromosome, cluster, and file.}
-#'   \item{index}{ A data table containing the correspondence of each bin in the
-#'   genome.}
-#'   \item{testRes}{ A list of treediff results for each cluster.}
-#' }
+#' @return A list containing:
+#' \item{trees}{ A list of all trees.}
+#' \item{metadata}{ A data frame containing the following columns: names (name
+#' of each tree), chromosome, cluster, and file.}
+#' \item{index}{ A data table containing the correspondence of each bin in the
+#' genome.}
+#' \item{testRes}{ A list of treediff results for each cluster.}
+#' 
+#' @references
+#' Christophe Ambroise, Alia Dehman, Pierre Neuvial, Guillem Rigaill, and 
+#' Nathalie Vialaneix (2019) Adjacency-constrained hierarchical clustering of a
+#' band similarity matrix with application to genomics. \emph{Algorithms for 
+#' Molecular Biology}, \strong{14}(22), 363–389.
 #'
 #' @examples
 #' replicates <- 1:3

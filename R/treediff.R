@@ -1,4 +1,4 @@
-#' @title Treediff
+#' @title Perform the treediff test
 #'
 #' @description Perform the treediff test to compare two sets of trees.
 #'
@@ -27,17 +27,15 @@
 #' Default to \code{FALSE}.
 #'
 #' @return An object of class \code{treeTest} with the following entries:
-#' \itemize{
-#'   \item{p.value}{ the p-value for the treediff test.}
-#'   \item{statistic}{ the value of the Student's statistic of each leaf pair of
-#'   the tree test.}
-#'   \item{p.value.indiv}{ the p-value of the Student's test for each leaf pair
-#'   of the tree test.}
-#'   \item{method}{ a character string indicating what type of test was
-#'   performed.}
-#'   \item{data.name}{ a character string giving the names of the tree
-#'   conditions.}
-#' }
+#' \item{p.value}{ the p-value for the treediff test.}
+#' \item{statistic}{ the value of the Student's statistic of each leaf pair of
+#' the tree test.}
+#' \item{p.value.indiv}{ the p-value of the Student's test for each leaf pair of
+#'  the tree test.}
+#' \item{method}{ a character string indicating what type of test was 
+#' performed.}
+#' \item{data.name}{ a character string giving the names of the tree 
+#' conditions.}
 #'
 #' @author Gwendaëlle Cardenas\cr
 #' Marie Chavent \email{marie.chavent@u-bordeaux.fr}\cr
@@ -47,9 +45,9 @@
 #' Nathalie Vialaneix \email{nathalie.vialaneix@inrae.fr}
 #'
 #' @references Neuvial Pierre, Randriamihamison Nathanaël, Chavent Marie,
-#' Foissac Sylvain and Vialaneix Nathalie (2023) Testing differences in
-#' structure between families of trees. \emph{Preprint submitted for
-#' publication}.
+#' Foissac Sylvain and Vialaneix Nathalie (2024) A two-sample tree-based test 
+#' for hierarchically organized genomic signals. \emph{Journal of the Royal
+#' Statistical Society, Series C}, \emph{Forthcoming}.
 #'
 #' @export
 #'

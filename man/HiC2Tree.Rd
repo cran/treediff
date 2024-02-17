@@ -2,7 +2,7 @@
 % Please edit documentation in R/HiC2Tree.R
 \name{HiC2Tree}
 \alias{HiC2Tree}
-\title{Hi-C to trees}
+\title{Convert Hi-C to trees}
 \usage{
 HiC2Tree(files, format, binsize = NULL, index = NULL, chromosomes, replicates)
 }
@@ -21,25 +21,23 @@ Required (and used) only with the "HiC-Pro" format.}
 analysis.}
 
 \item{replicates}{An integer indicating the number of replicates to be used
-in treediff.}
+in \code{treediff}.}
 }
 \value{
-A list containing: 
-\itemize{
-  \item{trees}{ A list of all trees.}
-  \item{metadata}{ A data frame containing the following columns: names (name
-  of each tree), chromosome, cluster, and file.}
-  \item{index}{ A data table containing the correspondence of each bin in the
-  genome.}
-  \item{testRes}{ A list of treediff results for each cluster.}
-}
+A list containing:
+\item{trees}{ A list of all trees.}
+\item{metadata}{ A data frame containing the following columns: names (name
+of each tree), chromosome, cluster, and file.}
+\item{index}{ A data table containing the correspondence of each bin in the
+genome.}
+\item{testRes}{ A list of treediff results for each cluster.}
 }
 \description{
-This function converts Hi-C data into trees, using the adjclust
-algorithm. It takes as input a file path vector, the format of the input
-data, the bin size of the Hi-C array, the chromosomes to be included in the
-analysis, and the number of replicates. It returns a list containing all
-trees, metadata, index and treediff results.
+This function converts Hi-C data into trees, using 
+\link[adjclust]{adjClust}. It takes as input a file path vector, the format 
+of the input data, the bin size of the Hi-C array, the chromosomes to be 
+included in the analysis, and the number of replicates. It returns a list 
+containing all trees, metadata, index and treediff results.
 }
 \examples{
 replicates <- 1:3
@@ -80,4 +78,10 @@ replicates <- c(3, 3)
 HiC2Tree(files, format, binsize, index, chromosomes, replicates)
 }
 
+}
+\references{
+Christophe Ambroise, Alia Dehman, Pierre Neuvial, Guillem Rigaill, and 
+Nathalie Vialaneix (2019) Adjacency-constrained hierarchical clustering of a
+band similarity matrix with application to genomics. \emph{Algorithms for 
+Molecular Biology}, \strong{14}(22), 363–389.
 }
