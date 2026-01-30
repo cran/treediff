@@ -300,7 +300,7 @@ normalizeCount.default <- function(count_matrice) {
 
   if (!identical(names(count_matrice[ ,c(1:3)]), c("chromosome", "index1",
                                                    "index2"))) {
-    message("Check that the first 3 columns contain in order `chromsome`,
+    message("Check that the first 3 columns contain in order `chromosome`,
             `index1` and `index2`")
   }
 

@@ -174,11 +174,11 @@ treediff <- function(trees1, trees2, replicates, scale = FALSE,
   outp <- compute_pvalue(outs$average_coph, outs$squeezed_var, replicates)
 
   # Aggregate p-values
-  out_aggr <- suppressWarnings(outp %>%
-    group_by(.data$cluster) %>%
-    summarise("p.value" = min(sort(.data$p.value) / (1:.data$p)) * .data$p,
+  out_aggr <- outp %>% group_by(.data$cluster) %>%
+    summarise("p.value" = 
+                min(sort(.data$p.value) / (1:(.data$p[1]))) * .data$p[1],
               .groups = "keep") %>%
-    unique())
+    unique()
 
   # Store results in a list
   data_name <- paste(substitute(trees1), "and", substitute(trees2))
