@@ -1,3 +1,9 @@
+# Version 0.2.3 [2026-06-08]
+
+## Improvements
+
+* Replaced dependency to HICDOC by dependency to HiCParser
+
 # Version 0.2.2 [2026-01-30]
 
 ## Bug fixes

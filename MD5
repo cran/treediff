@@ -1,7 +1,7 @@
-3432972b66b05aff5fa8f97787e6da77 *DESCRIPTION
-62d4722fe6eaab974a2cae53b958a7db *NAMESPACE
-3393664a9b24e4cbb41adc8d92af9eab *NEWS.md
-d26ca471002ea78e7856e316e8651338 *R/HiC2Tree.R
+0568fa29dc58c5a9c29f4d0dc3837da5 *DESCRIPTION
+e7ca7b080021dc7e224b744b39a1ae26 *NAMESPACE
+c54d041e7b4355d042f311bc66e7764a *NEWS.md
+deffdffa49590cc1b50be2d7a4844ee9 *R/HiC2Tree.R
 5c4156aaa349eb7baed7151ef55e111b *R/treediff.R
 05bb3a11805d0ad623aff467df875c53 *README.md
 5b6465b2d5345b6d3048e0eae3df3741 *inst/CITATION
@@ -19,10 +19,10 @@ fefa4ec8d4c68d16beb394dae6b671a1 *inst/extdata/Rep3-90-chr1_200000.bed
 44824878e178c352ea8d7ed10a04a2c9 *inst/extdata/Rep3-90-chr2_200000.bed
 ff7f61a16261fd59cd5ac8d06ba58a8d *inst/extdata/index.200000.longest18chr.abs.bed
 ac2e920ebea7e7e96f2a5045c8a662e5 *man/HiC2Tree.Rd
-4b7a666074172f581f7d2c6f629876ab *man/HiCDOCDataSet.Rd
+ff015d1bb40eb985102a3e41bc2e18b9 *man/HiCDataSet.Rd
 199715e45baadccd790da73b64f25d3b *man/clusterTree.Rd
 6332f71ad8d6699e029f6b7cf3b77592 *man/normalizeCount.Rd
 ae33a3e93c65a99422f71a4c952313ce *man/treediff.Rd
 83713a65d3d6dd1f32756bd284b60ea2 *tests/testthat.R
-887acfcf225406fd0e8f67f71b4e544d *tests/testthat/test-HiC2Tree.R
+a98224dd3c659553165db6e0bf221ab5 *tests/testthat/test-HiC2Tree.R
 ff67753d7b8f3ce49bd8c746a45f061c *tests/testthat/test-treediff.R

@@ -79,12 +79,12 @@ HiC2Tree <- function(files, format, binsize = NULL, index = NULL,
     stop("`files`, `chromosomes` or `replicates` is incorrectly filled in.")
   }
 
-  # create an HiCDOCDataSet object
-  HiCDOCDataSet <- HiCDOCDataSet(files, format, binsize, chromosomes, index)
-
-  # Extract the HiCDOCDataSet and index_mat_chr variables
-  res <- HiCDOCDataSet$HiCDOCDataSet
-  index_mat_chr <- HiCDOCDataSet$index_mat_chr
+  # create an HiCDataSet object
+  HiCDataSet <- HiCDataSet(files, format, binsize, chromosomes, index)
+  
+  # Extract the HiCDataSet and index_mat_chr variables
+  res <- HiCDataSet$HiCDataSet
+  index_mat_chr <- HiCDataSet$index_mat_chr
 
   # Normalize the count data using cyclic loess
   norm_matrices <- normalizeCount(res)
@@ -106,10 +106,10 @@ HiC2Tree <- function(files, format, binsize = NULL, index = NULL,
 
   # Return a list containing the trees, metadata, and indexData
   return(list("trees" = res_clus$trees, "metadata" = res_clus$metadata,
-              "index" = HiCDOCDataSet$indexData, "testRes" = testRes))
+              "index" = HiCDataSet$indexData, "testRes" = testRes))
 }
 
-#' @title Create a HiCDOCDataSet object from a set of files
+#' @title Create a HiCDataSet object from a set of files
 #'
 #' @description This function creates a count matrix from a set of files
 #' in different formats, such as tabular, cooler, juicer or HiC-Pro. It returns
@@ -128,8 +128,8 @@ HiC2Tree <- function(files, format, binsize = NULL, index = NULL,
 #'
 #' @return A list containing the following objects:
 #' \describe{
-#'   \item{HiCDOCDataSet}{A list of interaction matrices of the HiCDOCDataSet
-#'   class of the HiCDOC package, one for each file}
+#'   \item{HiCDataSet}{A list of interaction matrices of the InteractionSet
+#'   class of the HiCParser package, one for each file}
 #'   \item{indexData}{A data frame of index data for each interaction in the
 #'   matrices.}
 #'   \item{index_mat_chr}{A data frame containing the name of the matrices and
@@ -139,10 +139,10 @@ HiC2Tree <- function(files, format, binsize = NULL, index = NULL,
 #' @importFrom BiocGenerics cbind
 #' @importFrom data.table as.data.table
 #' @importFrom data.table setnames
-#' @importFrom HiCDOC HiCDOCDataSetFromTabular
-#' @importFrom HiCDOC HiCDOCDataSetFromCool
-#' @importFrom HiCDOC HiCDOCDataSetFromHiC
-#' @importFrom HiCDOC HiCDOCDataSetFromHiCPro
+#' @importFrom HiCParser parseTabular
+#' @importFrom HiCParser parseCool
+#' @importFrom HiCParser parseHiC
+#' @importFrom HiCParser parseHiCPro
 #' @importFrom InteractionSet interactions
 #' @importFrom methods new
 #' @importFrom purrr reduce
@@ -168,12 +168,12 @@ HiC2Tree <- function(files, format, binsize = NULL, index = NULL,
 #' format <- rep("HiC-Pro", length(replicates) * length(cond) * nb_chr)
 #' binsize <- 200000
 #' files <- system.file("extdata", unlist(all_mat_chr), package = "treediff")
-#' HiCDOCDataSet(files, format, binsize, chromosomes, index)
+#' HiCDataSet(files, format, binsize, chromosomes, index)
 #' }
 #'
 #' @export
 
-HiCDOCDataSet <- function(files, format, binsize = NULL, chromosomes,
+HiCDataSet <- function(files, format, binsize = NULL, chromosomes,
                           index = NULL) {
 
   if (is.null(chromosomes))stop("`chromsomes` is empty.")
@@ -204,34 +204,50 @@ HiCDOCDataSet <- function(files, format, binsize = NULL, chromosomes,
   # Set the conditions to "mat"
   conditions <- "mat"
 
-  # Create a list of HiCDOCDataSet objects
-  HiCDOCDataSet <- sapply(seq_along(files), function(i) {
+  # Create a list of HiCDataSet objects
+  HiCDataSet <- sapply(seq_along(files), function(i) {
     if (format[i] == "tabular") {
-      HiCDOCDataSet <- HiCDOCDataSetFromTabular(files[i])
+        HiCDataSet <- HiCParser::parseTabular(files[i])
     } else if (format[i] == "cooler") {
-      HiCDOCDataSet <- HiCDOCDataSetFromCool(files[i], i, conditions,
-                                             binsize)
+        HiCDataSet <- HiCParser::parseCool(
+            files[i], 
+            replicates = i, 
+            conditions = conditions,
+            binSize = binsize
+        )
     } else if (format[i] == "juicer") {
-      HiCDOCDataSet <- HiCDOCDataSetFromHiC(file[i], i, conditions,
-                                            binsize)
+        HiCDataSet <- HiCParser::parseHiC(
+            file[i], 
+            replicates = i, 
+            conditions = conditions,
+            binSize = binsize
+        )
 
     } else if (format[i] == "HiC-Pro") {
-      HiCDOCDataSet <- HiCDOCDataSetFromHiCPro(files[i], bedPaths = index, i,
-                                               conditions)
+        HiCDataSet <- HiCParser::parseHiCPro(
+            matrixPaths = files[i], 
+            bedPaths = index, 
+            replicates = i,
+            conditions = conditions
+        )
     }
-    return(HiCDOCDataSet)
+    HiCDataSet@metadata <- list(
+        "chromosomes" = HiCDataSet@interactions@regions@seqinfo@seqnames
+    )
+    return(HiCDataSet)
   })
 
-  if (length(HiCDOCDataSet) > 1) {
-    class(HiCDOCDataSet) <- "HiCDOCDataSetList"
+
+  if (length(HiCDataSet) > 1) {
+    class(HiCDataSet) <- "HiCDataSetList"
   } else {
-    HiCDOCDataSet <- HiCDOCDataSet[[1]]
+      HiCDataSet <- HiCDataSet[[1]]
   }
 
   # Create a matrix of chromosomes and matrix
-  index_mat_chr <- sapply(HiCDOCDataSet, function(data) {
-    chromosome <- data@chromosomes
-    variables <- paste(data@colData$condition, data@colData$replicate,
+  index_mat_chr <- sapply(HiCDataSet, function(data) {
+    chromosome <- data@interactions@regions@seqinfo@seqnames
+    variables <- paste(data@colData$condition, data@colData$replicate, 
                        sep = "_")
     return(list("chromosome" = chromosome, "variables" = variables ))
   })
@@ -242,7 +258,7 @@ HiCDOCDataSet <- function(files, format, binsize = NULL, chromosomes,
 
   indexData <- lapply(chromosomes, function(chr) {
 
-    dataSet <- HiCDOCDataSet[index_mat_chr$chromosome == chr]
+    dataSet <- HiCDataSet[index_mat_chr$chromosome == chr]
 
     indexData <- lapply(dataSet, function(data) {
       index <- as.data.frame(data@interactions@regions)
@@ -256,7 +272,7 @@ HiCDOCDataSet <- function(files, format, binsize = NULL, chromosomes,
 
   indexData <- Reduce(rbind, indexData)
 
-  return(list("HiCDOCDataSet" = HiCDOCDataSet, "indexData" = indexData,
+  return(list("HiCDataSet" = HiCDataSet, "indexData" = indexData,
               "index_mat_chr" = index_mat_chr))
 }
 
@@ -333,9 +349,9 @@ normalizeCount.list <- function(count_matrice) {
 }
 
 #' @export
-normalizeCount.HiCDOCDataSet <- function(count_matrice){
+normalizeCount.HiCDataSet <- function(count_matrice){
 
-  chromosome <- count_matrice@chromosomes
+  chromosome <- count_matrice@metadata$chromosomes
 
   interaction <- interactions(count_matrice)
   interaction <- as.data.frame(interaction)
@@ -351,9 +367,11 @@ normalizeCount.HiCDOCDataSet <- function(count_matrice){
 }
 
 #' @export
-normalizeCount.HiCDOCDataSetList <- function(count_matrice){
+normalizeCount.HiCDataSetList <- function(count_matrice){
 
-  matChr <- sapply(count_matrice, function(data) data@chromosomes)
+  matChr <- sapply(count_matrice, function(data) 
+    data@metadata$chromosomes
+  )
   chromosomes <- unique(matChr)
 
   mat_count <- lapply(chromosomes, function(chr) {

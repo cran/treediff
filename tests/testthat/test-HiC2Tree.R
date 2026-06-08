@@ -80,8 +80,8 @@ test_that("Test errors", {
                         replicates), "`binsize` is empty.")
 })
 
-data <- HiCDOCDataSet(files, format, binsize, chromosomes, index)
-norm_count <- normalizeCount(data$HiCDOCDataSet)
+data <- HiCDataSet(files, format, binsize, chromosomes, index)
+norm_count <- normalizeCount(data$HiCDataSet)
 resTree <- clusterTree(norm_count)
 tail(resTree$metadata)
 
@@ -103,7 +103,7 @@ resTest <- treediff(trees1, trees2, replicates)
 test_that("Comparison HiC2Tree and sub-functions works for simple cases", {
 
   # Check the output object has the expected names
-  expect_named(data, c("HiCDOCDataSet", "indexData", "index_mat_chr"))
+  expect_named(data, c("HiCDataSet", "indexData", "index_mat_chr"))
 
   # Check that the column names of the `norm_count` data frame are as expected
   expect_equal(colnames(norm_count[[1]]), c("chromosome", "index1", "index2",
@@ -130,13 +130,13 @@ test_that("Comparison HiC2Tree and sub-functions works for simple cases", {
   expect_length(c(trees1, trees2), nrow(res$metadata))
 })
 
-test_that("HiCDOCDataSet function", {
+test_that("HiCDataSet function", {
 
   # Check the output object has the expected names
-  expect_named(data, c("HiCDOCDataSet", "indexData", "index_mat_chr"))
+  expect_named(data, c("HiCDataSet", "indexData", "index_mat_chr"))
 
   # Check the output object has the expected class
-  expect_s3_class(data$HiCDOCDataSet, "HiCDOCDataSetList")
+  expect_s3_class(data$HiCDataSet, "HiCDataSetList")
   expect_s3_class(data$indexData, "data.frame")
   expect_s3_class(data$index_mat_chr, "data.frame")
 })
