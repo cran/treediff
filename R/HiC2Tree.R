@@ -348,14 +348,25 @@ normalizeCount.list <- function(count_matrice) {
   return(count_matrice)
 }
 
+# Extracts the bin indices of the two anchors of a GInteractions object (first
+# metadata column of each anchor). Avoids as.data.frame() on the S4 object,
+# which fails with recent versions of R-devel/S4Vectors.
+#' @importFrom InteractionSet anchors
+#' @importFrom S4Vectors mcols
+#' @noRd
+get_anchor_index <- function(interaction) {
+  a <- anchors(interaction)
+  data.frame(index1 = mcols(a$first)[[1]],
+             index2 = mcols(a$second)[[1]])
+}
+
 #' @export
 normalizeCount.HiCDataSet <- function(count_matrice){
 
   chromosome <- count_matrice@metadata$chromosomes
 
-  interaction <- interactions(count_matrice)
-  interaction <- as.data.frame(interaction)
-  interaction_mat <- cbind(interaction[, c(6,12)], assay(count_matrice))
+  interaction_mat <- cbind(get_anchor_index(interactions(count_matrice)),
+                           assay(count_matrice))
 
   names(interaction_mat) <- c("index1", "index2", "mat_1")
 
@@ -379,9 +390,7 @@ normalizeCount.HiCDataSetList <- function(count_matrice){
     dataSet <- count_matrice[index]
 
     data <- lapply(dataSet, function(data) {
-      interaction <- interactions(data)
-      interaction <- as.data.frame(interaction)
-      interaction <- cbind(interaction[, c(6,12)], assay(data))
+      cbind(get_anchor_index(interactions(data)), assay(data))
     })
 
     interaction_mat <- suppressWarnings(reduce(data, merge,

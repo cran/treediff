@@ -1,10 +1,14 @@
-0568fa29dc58c5a9c29f4d0dc3837da5 *DESCRIPTION
-e7ca7b080021dc7e224b744b39a1ae26 *NAMESPACE
-c54d041e7b4355d042f311bc66e7764a *NEWS.md
-deffdffa49590cc1b50be2d7a4844ee9 *R/HiC2Tree.R
+57b8d477cf4726e7f2a468d6271eeadc *DESCRIPTION
+9d5215bca222ab36a0aa3aef7e438e25 *NAMESPACE
+dd1dba0ea5efd6911577fc5953fafd8d *NEWS.md
+58b9fc8d9965de5af603c9fad570cc77 *R/HiC2Tree.R
 5c4156aaa349eb7baed7151ef55e111b *R/treediff.R
 05bb3a11805d0ad623aff467df875c53 *README.md
-5b6465b2d5345b6d3048e0eae3df3741 *inst/CITATION
+7a99c9231c5d1db2b3da1c214bc6e38f *build/vignette.rds
+5a7c43e67ffe6a7ab7d4f0836415da44 *inst/CITATION
+219d47fec9752b79405067147efd4512 *inst/doc/treediff.R
+dc53ee78b6544640dfcaee5e0addf4f9 *inst/doc/treediff.Rmd
+cbdd8485628793d229bdcc760c57563c *inst/doc/treediff.html
 8c7890f71cba57ca5b7a69ca945e1026 *inst/extdata/Rep1-110-chr1_200000.bed
 937baf48daccb1393d033197978dbda2 *inst/extdata/Rep1-110-chr2_200000.bed
 f69498865527bccfc9178077bdafc7b1 *inst/extdata/Rep1-90-chr1_200000.bed
@@ -26,3 +30,4 @@ ae33a3e93c65a99422f71a4c952313ce *man/treediff.Rd
 83713a65d3d6dd1f32756bd284b60ea2 *tests/testthat.R
 a98224dd3c659553165db6e0bf221ab5 *tests/testthat/test-HiC2Tree.R
 ff67753d7b8f3ce49bd8c746a45f061c *tests/testthat/test-treediff.R
+dc53ee78b6544640dfcaee5e0addf4f9 *vignettes/treediff.Rmd

@@ -15,26 +15,42 @@ export(normalizeCount)
 export(treediff)
 import(testthat)
 importFrom(BiocGenerics,cbind)
-importFrom(HiCParser,parseCool)
-importFrom(HiCParser,parseHiC)
-importFrom(HiCParser,parseHiCPro)
-importFrom(HiCParser,parseTabular)
-importFrom(InteractionSet,interactions)
-importFrom(SummarizedExperiment,SummarizedExperiment)
-importFrom(SummarizedExperiment,assay)
-importFrom(adjclust,adjClust)
-importFrom(adjclust,select)
+importFrom(HiCParser,
+  parseCool,
+  parseHiC,
+  parseHiCPro,
+  parseTabular
+)
+importFrom(InteractionSet,
+  anchors,
+  interactions
+)
+importFrom(S4Vectors,mcols)
+importFrom(SummarizedExperiment,
+  SummarizedExperiment,
+  assay
+)
+importFrom(adjclust,
+  adjClust,
+  select
+)
 importFrom(csaw,normOffsets)
-importFrom(data.table,as.data.table)
-importFrom(data.table,setnames)
-importFrom(dplyr,"%>%")
-importFrom(dplyr,group_by)
-importFrom(dplyr,summarise)
+importFrom(data.table,
+  as.data.table,
+  setnames
+)
+importFrom(dplyr,
+  "%>%",
+  group_by,
+  summarise
+)
 importFrom(limma,squeezeVar)
 importFrom(methods,new)
 importFrom(purrr,reduce)
 importFrom(reshape2,colsplit)
 importFrom(rlang,.data)
-importFrom(stats,cophenetic)
-importFrom(stats,hclust)
-importFrom(stats,pt)
+importFrom(stats,
+  cophenetic,
+  hclust,
+  pt
+)

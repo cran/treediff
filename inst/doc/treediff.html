@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Differential analysis of Hi-C data with treediff</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Differential analysis of Hi-C data with
+treediff</h1>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
+<li><a href="#the-pighic-dataset" id="toc-the-pighic-dataset">The
+<code>pighic</code> dataset</a></li>
+<li><a href="#all-in-one-analysis-with-hic2tree" id="toc-all-in-one-analysis-with-hic2tree">All-in-one analysis with
+<code>HiC2Tree()</code></a></li>
+<li><a href="#step-by-step-analysis" id="toc-step-by-step-analysis">Step
+by step analysis</a>
+<ul>
+<li><a href="#import-the-data" id="toc-import-the-data">Import the
+data</a></li>
+<li><a href="#normalize-the-counts" id="toc-normalize-the-counts">Normalize the counts</a></li>
+<li><a href="#build-the-trees" id="toc-build-the-trees">Build the
+trees</a></li>
+<li><a href="#run-the-test" id="toc-run-the-test">Run the test</a></li>
+</ul></li>
+<li><a href="#exploring-the-results" id="toc-exploring-the-results">Exploring the results</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
+<li><a href="#session-information" id="toc-session-information">Session
+information</a></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p><code>treediff</code> tests whether two families of trees
+(hierarchical clusterings) have the same structure. The test is based on
+the cophenetic distances of the trees and on aggregated Student’s tests,
+with moderated variances (Neuvial <em>et al.</em>, 2024).</p>
+<p><code>treediff</code> is a general purpose test for trees but has
+been initially designed to compare 3D genomic structure based on Hi-C
+data. In this context, trees are obtained using adjacency-constrained
+clustering of Hi-C contact maps along the genome (as implemented in
+Ambroise <em>et al.</em>, 2019), where several maps from two conditions
+are available.</p>
+<p>This vignette illustrates the main features of the package on a small
+Hi-C data set, stored in the <code>extdata</code> directory of the
+<code>hicream</code> package:</p>
+<ul>
+<li>the wrapper <code>HiC2Tree()</code>, which goes from Hi-C files to
+test results in a single call;</li>
+<li>the step by step pipeline (<code>HiCDataSet()</code>,
+<code>normalizeCount()</code>, <code>clusterTree()</code>, and
+<code>treediff()</code>);</li>
+<li>the exploration of the results (<code>print()</code> and
+<code>summary()</code> methods and link with genomic coordinates).</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;treediff&quot;</span>)</span></code></pre></div>
+</div>
+<div id="the-pighic-dataset" class="section level2">
+<h2>The <code>pighic</code> dataset</h2>
+<p>The <code>pighic</code> dataset is an extract of the dataset
+published in (Marti-Marimon <em>et al.</em>, 2021). It contains 6 Hi-C
+matrices (3 in each condition) obtained from two different developmental
+stages of pig embryos (90 and 110 days of gestation) for two chromosomes
+(1 and 2). Hi-C contact maps are provided in HiC-Pro format and an
+additional file (the <em>index</em>) gives the genomic coordinates of
+the bins.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>replicates <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>conditions <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;90&quot;</span>, <span class="st">&quot;110&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>chromosomes <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>all_begins <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">interaction</span>(<span class="fu">expand.grid</span>(replicates, conditions),</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>                                       <span class="at">sep =</span> <span class="st">&quot;-&quot;</span>))</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>allMat <span class="ot">&lt;-</span> <span class="fu">lapply</span>(chromosomes, <span class="cf">function</span>(chr) {</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">&quot;Rep&quot;</span>, all_begins, <span class="st">&quot;-chr&quot;</span>, chr, <span class="st">&quot;_200000.bed&quot;</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>})</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="fu">unlist</span>(allMat), <span class="at">package =</span> <span class="st">&quot;hicream&quot;</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;index.200000.longest18chr.abs.bed&quot;</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                     <span class="at">package =</span> <span class="st">&quot;hicream&quot;</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>format <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="st">&quot;HiC-Pro&quot;</span>, <span class="fu">length</span>(files))</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>binsize <span class="ot">&lt;-</span> <span class="dv">200000</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>nb_replicates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">3</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="fu">basename</span>(files)</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Rep1-90-chr1_200000.bed&quot;  &quot;Rep2-90-chr1_200000.bed&quot; </span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt;  [3] &quot;Rep3-90-chr1_200000.bed&quot;  &quot;Rep1-110-chr1_200000.bed&quot;</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt;  [5] &quot;Rep2-110-chr1_200000.bed&quot; &quot;Rep3-110-chr1_200000.bed&quot;</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Rep1-90-chr2_200000.bed&quot;  &quot;Rep2-90-chr2_200000.bed&quot; </span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;Rep3-90-chr2_200000.bed&quot;  &quot;Rep1-110-chr2_200000.bed&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt; [11] &quot;Rep2-110-chr2_200000.bed&quot; &quot;Rep3-110-chr2_200000.bed&quot;</span></span></code></pre></div>
+<p>Files must be ordered by chromosome, then by condition, then by
+replicate. The vector <code>nb_replicates</code> gives the number of
+replicates in each condition (here, 3 in the first condition,
+<code>90</code>, and 3 in the second one, <code>110</code>).</p>
+</div>
+<div id="all-in-one-analysis-with-hic2tree" class="section level2">
+<h2>All-in-one analysis with <code>HiC2Tree()</code></h2>
+<p><code>HiC2Tree()</code> reads the files, normalizes the contact
+counts, builds one tree per matrix and runs the <code>treediff</code>
+test:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">HiC2Tree</span>(files, format, binsize, index, chromosomes, nb_replicates)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">names</span>(res)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; [1] &quot;trees&quot;    &quot;metadata&quot; &quot;index&quot;    &quot;testRes&quot;</span></span></code></pre></div>
+<p>The output is a list with four entries:</p>
+<ul>
+<li><code>trees</code>: the list of all trees (one for each
+matrix);</li>
+<li><code>metadata</code>: a description of each tree (matrix,
+chromosome and cluster);</li>
+<li><code>index</code>: the genomic coordinates of the bins;</li>
+<li><code>testRes</code>: the results of the <code>treediff</code>
+test.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>res<span class="sc">$</span>metadata</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt;     names chromosome cluster    mat</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; 1   tree1          1       1  mat_1</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; 2   tree2          1       1  mat_2</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 3   tree3          1       1  mat_3</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 4   tree4          1       1  mat_4</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; 5   tree5          1       1  mat_5</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 6   tree6          1       1  mat_6</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; 7   tree7          2       1  mat_7</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 8   tree8          2       1  mat_8</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 9   tree9          2       1  mat_9</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; 10 tree10          2       1 mat_10</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 11 tree11          2       1 mat_11</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 12 tree12          2       1 mat_12</span></span></code></pre></div>
+<p>Each chromosome is split into clusters of bins (here, one cluster per
+chromosome), and one tree is built for each cluster and each replicate.
+One test is performed for each cluster.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>res<span class="sc">$</span>testRes</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt;  Tree test based on aggregated t-tests</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; data: trees1 and trees2</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; alternative hypothesis: the two sets of trees have different structure.</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;   p-values:</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 1 0.2836782</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 2 0.0000000</span></span></code></pre></div>
+<p>The returned object has class <code>treeTest</code>. Its
+<code>summary()</code> method gives more details on the distribution of
+the <span class="math inline">\(p\)</span>-values and of the individual
+statistics:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">summary</span>(res<span class="sc">$</span>testRes)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; Summary</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  Class:  treeTest</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;  Tree test based on aggregated t-tests</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; data: trees1 and trees2</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; alternative hypothesis: the two sets of trees have different structure.</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;   p-values:</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; 1 0.2836782</span></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; 2 0.0000000</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt;  p-value summary:</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt; 0.00000 0.07092 0.14184 0.14184 0.21276 0.28368</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;  indiv. statistics  indiv. p-values </span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;  Min.   :-12.7531   Min.   :0.0000  </span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;  1st Qu.:  0.1170   1st Qu.:0.9069  </span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;  Median :  0.1170   Median :0.9069  </span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;  Mean   :  0.1358   Mean   :0.8928  </span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt;  3rd Qu.:  0.1170   3rd Qu.:0.9069  </span></span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="co">#&gt;  Max.   : 27.2227   Max.   :0.9529</span></span></code></pre></div>
+<p>The test finds no difference between the two conditions for the first
+chromosome (cluster 1) but a very significant one for the second
+chromosome (cluster 2).</p>
+</div>
+<div id="step-by-step-analysis" class="section level2">
+<h2>Step by step analysis</h2>
+<p><code>HiC2Tree()</code> is a wrapper that successively calls the
+functions described in this section. They can be used separately, for
+instance to provide a different normalization or to inspect intermediate
+results.</p>
+<div id="import-the-data" class="section level3">
+<h3>Import the data</h3>
+<p><code>HiCDataSet()</code> parses the files (with the
+<code>HiCParser</code> package) and returns the contact matrices
+together with the bin coordinates:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">HiCDataSet</span>(files, format, binsize, chromosomes, index)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">names</span>(data)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; [1] &quot;HiCDataSet&quot;    &quot;indexData&quot;     &quot;index_mat_chr&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">length</span>(data<span class="sc">$</span>HiCDataSet)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; [1] 12</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">head</span>(data<span class="sc">$</span>indexData)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;   seqnames     start       end  width strand index</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; 1        1 224800001 225000000 200000      *  1125</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; 2        1 225000001 225200000 200000      *  1126</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; 3        1 225200001 225400000 200000      *  1127</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; 4        1 225400001 225600000 200000      *  1128</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; 5        1 225600001 225800000 200000      *  1129</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; 6        1 225800001 226000000 200000      *  1130</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>data<span class="sc">$</span>index_mat_chr</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt;    chromosome variables</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 1           1     mat_1</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 2           1     mat_2</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; 3           1     mat_3</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 4           1     mat_4</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 5           1     mat_5</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 6           1     mat_6</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; 7           2     mat_7</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; 8           2     mat_8</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 9           2     mat_9</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; 10          2    mat_10</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; 11          2    mat_11</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; 12          2    mat_12</span></span></code></pre></div>
+</div>
+<div id="normalize-the-counts" class="section level3">
+<h3>Normalize the counts</h3>
+<p><code>normalizeCount()</code> normalizes the contact counts of all
+matrices of a same chromosome together (cyclic loess normalization) and
+returns one data frame per chromosome, with one column per matrix:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>norm_counts <span class="ot">&lt;-</span> <span class="fu">normalizeCount</span>(data<span class="sc">$</span>HiCDataSet)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">length</span>(norm_counts)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; [1] 2</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="fu">head</span>(norm_counts[[<span class="dv">1</span>]])</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt;   chromosome index1 index2     mat_1     mat_2     mat_3     mat_4     mat_5</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; 1          1   1125   1125 1062.4253 1099.9781 1018.1186 1128.7022 1004.1958</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; 2          1   1125   1126 1292.2863 1289.5402 1135.6151 1545.1463 1307.1594</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; 3          1   1125   1127  631.7030  630.2060  630.7220  635.9711  633.7022</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; 4          1   1125   1128  320.0915  316.8550  323.6230  323.3463  296.5418</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; 5          1   1125   1129  343.9447  403.8594  391.2275  252.4207  349.5398</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; 6          1   1125   1130  340.8043  341.7083  325.9917  348.9478  385.4575</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt;       mat_6</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt; 1 1083.6752</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; 2 1340.1839</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt; 3  634.7460</span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; 4  335.9719</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; 5  331.6393</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt; 6  334.7257</span></span></code></pre></div>
+</div>
+<div id="build-the-trees" class="section level3">
+<h3>Build the trees</h3>
+<p><code>clusterTree()</code> clusters the bins of each chromosome with
+a constrained hierarchical clustering (only adjacent bins can be merged,
+<code>adjclust::adjClust()</code>), cuts the chromosome into clusters
+using the broken-stick rule and builds one tree for each cluster and
+each matrix.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>clust <span class="ot">&lt;-</span> <span class="fu">clusterTree</span>(norm_counts)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">names</span>(clust)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; [1] &quot;trees&quot;    &quot;metadata&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="fu">class</span>(clust<span class="sc">$</span>trees[[<span class="dv">1</span>]])</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; [1] &quot;hclust&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>clust<span class="sc">$</span>metadata</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;     names chromosome cluster    mat</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; 1   tree1          1       1  mat_1</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; 2   tree2          1       1  mat_2</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; 3   tree3          1       1  mat_3</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; 4   tree4          1       1  mat_4</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; 5   tree5          1       1  mat_5</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; 6   tree6          1       1  mat_6</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt; 7   tree7          2       1  mat_7</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt; 8   tree8          2       1  mat_8</span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; 9   tree9          2       1  mat_9</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt; 10 tree10          2       1 mat_10</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt; 11 tree11          2       1 mat_11</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt; 12 tree12          2       1 mat_12</span></span></code></pre></div>
+</div>
+<div id="run-the-test" class="section level3">
+<h3>Run the test</h3>
+<p><code>treediff()</code> takes two lists of trees. Within each list,
+trees are ordered by cluster and then by replicate. The number of
+replicates in each condition is given by <code>replicates</code>, and
+one <span class="math inline">\(p\)</span>-value is obtained for each
+cluster.</p>
+<p>Here, we first select the trees of each condition (the first 3 trees
+of each cluster belong to the first condition and the last 3 to the
+second one) and run the test on all clusters:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>nb_clusters <span class="ot">&lt;-</span> <span class="fu">nrow</span>(<span class="fu">unique</span>(clust<span class="sc">$</span>metadata[, <span class="fu">c</span>(<span class="st">&quot;chromosome&quot;</span>, <span class="st">&quot;cluster&quot;</span>)]))</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>in_cond1 <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="cn">TRUE</span>, <span class="cn">FALSE</span>), nb_replicates), nb_clusters)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>trees1 <span class="ot">&lt;-</span> clust<span class="sc">$</span>trees[in_cond1]</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>trees2 <span class="ot">&lt;-</span> clust<span class="sc">$</span>trees[<span class="sc">!</span>in_cond1]</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">treediff</span>(trees1, trees2, <span class="at">replicates =</span> nb_replicates)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>test<span class="sc">$</span>p.value</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; [1] 0.2836782 0.0000000</span></span></code></pre></div>
+<p>These are the same <span class="math inline">\(p\)</span>-values as
+the ones obtained with <code>HiC2Tree()</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">all.equal</span>(test<span class="sc">$</span>p.value, res<span class="sc">$</span>testRes<span class="sc">$</span>p.value)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>The trees of the second condition may have a different number of
+replicates than the trees of the first one: It is enough to give the
+right values in <code>replicates</code>. Two options of
+<code>treediff()</code> are also useful in practice:</p>
+<ul>
+<li><code>scale = TRUE</code> rescales all trees so that their heights
+range between 0 and 1, which removes global differences in height
+between the trees. In practice, we do not recommend using this option
+unless you know what you are doing;</li>
+<li><code>order_labels = TRUE</code> aligns the order of the leaves
+between all trees, which is required when the trees have not been built
+with the same leaf ordering.</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">treediff</span>(trees1, trees2, <span class="at">replicates =</span> nb_replicates, <span class="at">scale =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>p.value</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.5702923 0.3749414</span></span></code></pre></div>
+</div>
+</div>
+<div id="exploring-the-results" class="section level2">
+<h2>Exploring the results</h2>
+<p>The <code>p.value.indiv</code> and <code>statistic</code> entries of
+the output contain the Student’s test of each pair of leaves of the
+trees (for all clusters). Their distribution can be used to check how
+the signal is distributed:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">hist</span>(test<span class="sc">$</span>p.value.indiv, <span class="at">breaks =</span> <span class="dv">50</span>, <span class="at">main =</span> <span class="st">&quot;Individual p-values&quot;</span>,</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">&quot;p-value&quot;</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>The cluster-level <span class="math inline">\(p\)</span>-values are
+linked to genomic regions through the <code>metadata</code> and
+<code>index</code> entries of the <code>HiC2Tree()</code> output. For
+instance, the genomic span of the bins of each chromosome is:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">aggregate</span>(<span class="fu">cbind</span>(start, end) <span class="sc">~</span> seqnames, <span class="at">data =</span> res<span class="sc">$</span>index,</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>          <span class="at">FUN =</span> <span class="cf">function</span>(x) <span class="fu">c</span>(<span class="at">min =</span> <span class="fu">min</span>(x), <span class="at">max =</span> <span class="fu">max</span>(x)))</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="co">#&gt;   seqnames start.min start.max   end.min   end.max</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="co">#&gt; 1        1 224800001 225800001 225000000 226000000</span></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co">#&gt; 2        2         1 151800001    200000 151935994</span></span></code></pre></div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Ambroise C., Dehman A., Neuvial P., Rigaill G. and Vialaneix N.
+(2019) Adjacency-constrained hierarchical clustering of a band
+similarity matrix with application to genomics. <em>Algorithms for
+Molecular Biology</em>, <strong>14</strong>(22), 363-389.</p>
+<p>Marti-Marimon, M., Vialaneix, N., Lahbib-Mansais, Y., Zytnicki, M.,
+Camut, S., Robelin, D., Yerle-Bouissou, M., &amp; Foissac, S. (2021).
+Major reorganization of chromosome conformation during muscle
+development in pig. <em>Frontiers in Genetics</em>, 12, 748239.</p>
+<p>Neuvial P., Randriamihamison N., Chavent M., Foissac S. and Vialaneix
+N. (2024) A two-sample tree-based test for hierarchically organized
+genomic signals. <em>Journal of the Royal Statistical Society, Series
+C</em>, Forthcoming.</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="co">#&gt; R version 4.6.2 (2026-10-29)</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="co">#&gt; Running under: Ubuntu 26.04.1 LTS</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co">#&gt; Matrix products: default</span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0</span></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="co">#&gt; locale:</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co">#&gt;  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              </span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a><span class="co">#&gt;  [3] LC_TIME=fr_FR.UTF-8        LC_COLLATE=C              </span></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co">#&gt;  [5] LC_MONETARY=fr_FR.UTF-8    LC_MESSAGES=en_US.UTF-8   </span></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co">#&gt;  [7] LC_PAPER=fr_FR.UTF-8       LC_NAME=C                 </span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="co">#&gt;  [9] LC_ADDRESS=C               LC_TELEPHONE=C            </span></span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt; [11] LC_MEASUREMENT=fr_FR.UTF-8 LC_IDENTIFICATION=C       </span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co">#&gt; time zone: Europe/Paris</span></span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="co">#&gt; attached base packages:</span></span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
+<span id="cb15-25"><a href="#cb15-25" tabindex="-1"></a><span class="co">#&gt; [1] treediff_0.3.0</span></span>
+<span id="cb15-26"><a href="#cb15-26" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-27"><a href="#cb15-27" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span id="cb15-28"><a href="#cb15-28" tabindex="-1"></a><span class="co">#&gt;   [1] bitops_1.1-0                pbapply_1.7-5              </span></span>
+<span id="cb15-29"><a href="#cb15-29" tabindex="-1"></a><span class="co">#&gt;   [3] gridExtra_2.3.1             testthat_3.3.2             </span></span>
+<span id="cb15-30"><a href="#cb15-30" tabindex="-1"></a><span class="co">#&gt;   [5] rlang_1.3.0                 magrittr_2.0.5             </span></span>
+<span id="cb15-31"><a href="#cb15-31" tabindex="-1"></a><span class="co">#&gt;   [7] otel_0.3.0                  matrixStats_1.5.0          </span></span>
+<span id="cb15-32"><a href="#cb15-32" tabindex="-1"></a><span class="co">#&gt;   [9] compiler_4.6.2              png_0.1-9                  </span></span>
+<span id="cb15-33"><a href="#cb15-33" tabindex="-1"></a><span class="co">#&gt;  [11] vctrs_0.7.3                 reshape2_1.4.5             </span></span>
+<span id="cb15-34"><a href="#cb15-34" tabindex="-1"></a><span class="co">#&gt;  [13] stringr_1.6.0               pkgconfig_2.0.3            </span></span>
+<span id="cb15-35"><a href="#cb15-35" tabindex="-1"></a><span class="co">#&gt;  [15] crayon_1.5.3                fastmap_1.2.0              </span></span>
+<span id="cb15-36"><a href="#cb15-36" tabindex="-1"></a><span class="co">#&gt;  [17] XVector_0.52.0              Rsamtools_2.28.0           </span></span>
+<span id="cb15-37"><a href="#cb15-37" tabindex="-1"></a><span class="co">#&gt;  [19] rmarkdown_2.32              UCSC.utils_1.8.0           </span></span>
+<span id="cb15-38"><a href="#cb15-38" tabindex="-1"></a><span class="co">#&gt;  [21] purrr_1.2.2                 xfun_0.58                  </span></span>
+<span id="cb15-39"><a href="#cb15-39" tabindex="-1"></a><span class="co">#&gt;  [23] cachem_1.1.0                cigarillo_1.2.1            </span></span>
+<span id="cb15-40"><a href="#cb15-40" tabindex="-1"></a><span class="co">#&gt;  [25] GenomeInfoDb_1.48.0         jsonlite_2.0.0             </span></span>
+<span id="cb15-41"><a href="#cb15-41" tabindex="-1"></a><span class="co">#&gt;  [27] rhdf5filters_1.24.1         DelayedArray_0.38.2        </span></span>
+<span id="cb15-42"><a href="#cb15-42" tabindex="-1"></a><span class="co">#&gt;  [29] Rhdf5lib_2.0.0              BiocParallel_1.46.0        </span></span>
+<span id="cb15-43"><a href="#cb15-43" tabindex="-1"></a><span class="co">#&gt;  [31] parallel_4.6.2              R6_2.6.1                   </span></span>
+<span id="cb15-44"><a href="#cb15-44" tabindex="-1"></a><span class="co">#&gt;  [33] bslib_0.12.0                stringi_1.8.9              </span></span>
+<span id="cb15-45"><a href="#cb15-45" tabindex="-1"></a><span class="co">#&gt;  [35] RColorBrewer_1.1-3          limma_3.68.5               </span></span>
+<span id="cb15-46"><a href="#cb15-46" tabindex="-1"></a><span class="co">#&gt;  [37] reticulate_1.47.0           rtracklayer_1.72.0         </span></span>
+<span id="cb15-47"><a href="#cb15-47" tabindex="-1"></a><span class="co">#&gt;  [39] brio_1.1.5                  GenomicRanges_1.64.0       </span></span>
+<span id="cb15-48"><a href="#cb15-48" tabindex="-1"></a><span class="co">#&gt;  [41] jquerylib_0.1.4             Rcpp_1.1.2                 </span></span>
+<span id="cb15-49"><a href="#cb15-49" tabindex="-1"></a><span class="co">#&gt;  [43] Seqinfo_1.2.0               SummarizedExperiment_1.42.0</span></span>
+<span id="cb15-50"><a href="#cb15-50" tabindex="-1"></a><span class="co">#&gt;  [45] knitr_1.52                  IRanges_2.46.0             </span></span>
+<span id="cb15-51"><a href="#cb15-51" tabindex="-1"></a><span class="co">#&gt;  [47] Matrix_1.7-6                tidyselect_1.2.1           </span></span>
+<span id="cb15-52"><a href="#cb15-52" tabindex="-1"></a><span class="co">#&gt;  [49] abind_1.4-8                 yaml_2.3.12                </span></span>
+<span id="cb15-53"><a href="#cb15-53" tabindex="-1"></a><span class="co">#&gt;  [51] viridis_0.6.5               codetools_0.2-20           </span></span>
+<span id="cb15-54"><a href="#cb15-54" tabindex="-1"></a><span class="co">#&gt;  [53] curl_8.1.0                  lattice_0.23-1             </span></span>
+<span id="cb15-55"><a href="#cb15-55" tabindex="-1"></a><span class="co">#&gt;  [55] tibble_3.3.1                plyr_1.8.9                 </span></span>
+<span id="cb15-56"><a href="#cb15-56" tabindex="-1"></a><span class="co">#&gt;  [57] InteractionSet_1.40.0       Biobase_2.72.0             </span></span>
+<span id="cb15-57"><a href="#cb15-57" tabindex="-1"></a><span class="co">#&gt;  [59] S7_1.0.0                    csaw_1.46.0                </span></span>
+<span id="cb15-58"><a href="#cb15-58" tabindex="-1"></a><span class="co">#&gt;  [61] evaluate_1.0.5              capushe_1.1.3              </span></span>
+<span id="cb15-59"><a href="#cb15-59" tabindex="-1"></a><span class="co">#&gt;  [63] Biostrings_2.80.2           pillar_1.11.1              </span></span>
+<span id="cb15-60"><a href="#cb15-60" tabindex="-1"></a><span class="co">#&gt;  [65] MatrixGenerics_1.24.0       auk_0.10.0                 </span></span>
+<span id="cb15-61"><a href="#cb15-61" tabindex="-1"></a><span class="co">#&gt;  [67] stats4_4.6.2                generics_0.1.4             </span></span>
+<span id="cb15-62"><a href="#cb15-62" tabindex="-1"></a><span class="co">#&gt;  [69] RCurl_1.98-1.20             S4Vectors_0.50.3           </span></span>
+<span id="cb15-63"><a href="#cb15-63" tabindex="-1"></a><span class="co">#&gt;  [71] ggplot2_4.0.4               sparseMatrixStats_1.24.0   </span></span>
+<span id="cb15-64"><a href="#cb15-64" tabindex="-1"></a><span class="co">#&gt;  [73] scales_1.4.0                gtools_3.9.5               </span></span>
+<span id="cb15-65"><a href="#cb15-65" tabindex="-1"></a><span class="co">#&gt;  [75] glue_1.8.1                  metapod_1.20.0             </span></span>
+<span id="cb15-66"><a href="#cb15-66" tabindex="-1"></a><span class="co">#&gt;  [77] tools_4.6.2                 dendextend_1.19.1          </span></span>
+<span id="cb15-67"><a href="#cb15-67" tabindex="-1"></a><span class="co">#&gt;  [79] BiocIO_1.22.0               hicream_0.0.4              </span></span>
+<span id="cb15-68"><a href="#cb15-68" tabindex="-1"></a><span class="co">#&gt;  [81] data.table_1.18.6.1         BSgenome_1.80.0            </span></span>
+<span id="cb15-69"><a href="#cb15-69" tabindex="-1"></a><span class="co">#&gt;  [83] locfit_1.5-9.12             GenomicAlignments_1.48.0   </span></span>
+<span id="cb15-70"><a href="#cb15-70" tabindex="-1"></a><span class="co">#&gt;  [85] XML_3.99-0.25               rhdf5_2.56.1               </span></span>
+<span id="cb15-71"><a href="#cb15-71" tabindex="-1"></a><span class="co">#&gt;  [87] grid_4.6.2                  edgeR_4.10.7               </span></span>
+<span id="cb15-72"><a href="#cb15-72" tabindex="-1"></a><span class="co">#&gt;  [89] adjclust_0.6.11             Rhtslib_3.8.0              </span></span>
+<span id="cb15-73"><a href="#cb15-73" tabindex="-1"></a><span class="co">#&gt;  [91] restfulr_0.0.17             HiCParser_1.4.0            </span></span>
+<span id="cb15-74"><a href="#cb15-74" tabindex="-1"></a><span class="co">#&gt;  [93] cli_3.6.6                   S4Arrays_1.12.1            </span></span>
+<span id="cb15-75"><a href="#cb15-75" tabindex="-1"></a><span class="co">#&gt;  [95] viridisLite_0.4.3           dplyr_1.2.1                </span></span>
+<span id="cb15-76"><a href="#cb15-76" tabindex="-1"></a><span class="co">#&gt;  [97] gtable_0.3.6                sass_0.4.10                </span></span>
+<span id="cb15-77"><a href="#cb15-77" tabindex="-1"></a><span class="co">#&gt;  [99] digest_0.6.39               BiocGenerics_0.58.1        </span></span>
+<span id="cb15-78"><a href="#cb15-78" tabindex="-1"></a><span class="co">#&gt; [101] SparseArray_1.12.3          diffHic_1.44.0             </span></span>
+<span id="cb15-79"><a href="#cb15-79" tabindex="-1"></a><span class="co">#&gt; [103] rjson_0.2.23                farver_2.1.2               </span></span>
+<span id="cb15-80"><a href="#cb15-80" tabindex="-1"></a><span class="co">#&gt; [105] htmltools_0.5.9             lifecycle_1.0.5            </span></span>
+<span id="cb15-81"><a href="#cb15-81" tabindex="-1"></a><span class="co">#&gt; [107] httr_1.4.9                  statmod_1.5.2              </span></span>
+<span id="cb15-82"><a href="#cb15-82" tabindex="-1"></a><span class="co">#&gt; [109] MASS_7.3-66</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
